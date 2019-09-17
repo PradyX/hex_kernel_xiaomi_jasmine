@@ -149,8 +149,7 @@ int f2fs_convert_inline_page(struct dnode_of_data *dn, struct page *page)
 		return err;
 
 	f2fs_bug_on(F2FS_P_SB(page), PageWriteback(page));
-
-	f2fs_do_read_inline_data(page, dn->inode_page);
+	read_inline_data(page, dn->inode_page);
 	set_page_dirty(page);
 
 	/* clear dirty state */
@@ -460,8 +459,8 @@ static int f2fs_add_inline_entries(struct inode *dir, void *inline_dentry)
 	return 0;
 punch_dentry_pages:
 	truncate_inode_pages(&dir->i_data, 0);
-	f2fs_truncate_blocks(dir, 0, false);
-	f2fs_remove_dirty_inode(dir);
+	truncate_blocks(dir, 0, false);
+	remove_dirty_inode(dir);
 	return err;
 }
 
@@ -479,7 +478,7 @@ static int f2fs_move_rehashed_dirents(struct inode *dir, struct page *ipage,
 	}
 
 	memcpy(backup_dentry, inline_dentry, MAX_INLINE_DATA(dir));
-	f2fs_truncate_inline_inode(dir, ipage, 0);
+	truncate_inline_inode(dir, ipage, 0);
 
 	unlock_page(ipage);
 

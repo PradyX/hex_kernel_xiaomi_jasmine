@@ -1999,7 +1999,7 @@ bool f2fs_is_checkpointed_data(struct f2fs_sb_info *sbi, block_t blkaddr)
 	struct seg_entry *se;
 	bool is_cp = false;
 
-	if (!is_valid_blkaddr(blkaddr))
+	if (blkaddr == NEW_ADDR || blkaddr == NULL_ADDR)
 		return true;
 
 	down_read(&sit_i->sentry_lock);
@@ -3072,8 +3072,7 @@ void f2fs_wait_on_page_writeback(struct page *page,
 void f2fs_wait_on_block_writeback(struct f2fs_sb_info *sbi, block_t blkaddr)
 {
 	struct page *cpage;
-
-	if (!is_valid_blkaddr(blkaddr))
+	if (blkaddr == NEW_ADDR || blkaddr == NULL_ADDR)
 		return;
 
 	cpage = find_lock_page(META_MAPPING(sbi), blkaddr);
@@ -3807,15 +3806,6 @@ static int build_sit_entries(struct f2fs_sb_info *sbi)
 		unsigned int old_valid_blocks;
 
 		start = le32_to_cpu(segno_in_journal(journal, i));
-		if (start >= MAIN_SEGS(sbi)) {
-			f2fs_msg(sbi->sb, KERN_ERR,
-					"Wrong journal entry on segno %u",
-					start);
-			set_sbi_flag(sbi, SBI_NEED_FSCK);
-			err = -EINVAL;
-			break;
-		}
-
 		se = &sit_i->sentries[start];
 		sit = sit_in_journal(journal, i);
 
@@ -3850,15 +3840,6 @@ static int build_sit_entries(struct f2fs_sb_info *sbi)
 		}
 	}
 	up_read(&curseg->journal_rwsem);
-
-	if (!err && total_node_blocks != valid_node_count(sbi)) {
-		f2fs_msg(sbi->sb, KERN_ERR,
-			"SIT is corrupted node# %u vs %u",
-			total_node_blocks, valid_node_count(sbi));
-		set_sbi_flag(sbi, SBI_NEED_FSCK);
-		err = -EINVAL;
-	}
-
 	return err;
 }
 
