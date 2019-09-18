@@ -558,7 +558,7 @@ add_dentry:
 
 	if (inode) {
 		down_write(&F2FS_I(inode)->i_sem);
-		page = init_inode_metadata(inode, dir, new_name,
+		page = f2fs_init_inode_metadata(inode, dir, new_name,
 						orig_name, NULL);
 		if (IS_ERR(page)) {
 			err = PTR_ERR(page);
@@ -586,7 +586,7 @@ fail:
 	return err;
 }
 
-int __f2fs_do_add_link(struct inode *dir, struct fscrypt_name *fname,
+int f2fs_add_dentry(struct inode *dir, struct fscrypt_name *fname,
 				struct inode *inode, nid_t ino, umode_t mode)
 {
 	struct qstr new_name;
@@ -800,7 +800,8 @@ int f2fs_fill_dentries(struct dir_context *ctx, struct f2fs_dentry_ptr *d,
 			continue;
 		}
 
-		d_type = get_de_type(de);
+		d_type = f2fs_get_de_type(de);
+
 		de_name.name = d->filename[bit_pos];
 		de_name.len = le16_to_cpu(de->name_len);
 
